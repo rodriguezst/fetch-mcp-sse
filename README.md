@@ -2,7 +2,7 @@
 
 ![fetch mcp logo](logo.jpg)
 
-This MCP server provides functionality to fetch web content in various formats, including HTML, JSON, plain text, and Markdown.
+This MCP server provides functionality to fetch web content in various formats, including HTML, JSON, plain text, and Markdown. It supports both STDIO and SSE (Server-Sent Events) transport protocols.
 
 <a href="https://glama.ai/mcp/servers/nu09wf23ao">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/nu09wf23ao/badge" alt="Fetch Server MCP server" />
@@ -52,7 +52,9 @@ This server does not provide any persistent resources. It's designed to fetch an
 
 ### Usage
 
-To use the server, you can run it directly:
+#### STDIO MCP Server (Original)
+
+To use the STDIO server, you can run it directly:
 
 ```bash
 npm start
@@ -60,9 +62,35 @@ npm start
 
 This will start the Fetch MCP Server running on stdio.
 
-### Usage with Desktop App
+#### SSE MCP Server (New)
 
-To integrate this server with a desktop app, add the following to your app's server configuration:
+To use the SSE server for remote clients:
+
+```bash
+npm run start:sse
+```
+
+This will start the SSE server on port 3000 (or the port specified in the `PORT` environment variable).
+
+#### Authentication (Optional)
+
+The SSE server supports optional Bearer token authentication. Set the `API_KEY_TOKEN` environment variable to enable it:
+
+```bash
+API_KEY_TOKEN=your-secret-token npm run start:sse
+```
+
+When authentication is enabled, all requests to the SSE server must include the `Authorization: Bearer your-secret-token` header.
+
+### SSE Server Endpoints
+
+- `GET /sse` - Establish SSE connection (returns session ID)
+- `POST /messages?sessionId=<session_id>` - Send MCP requests
+- `GET /health` - Server health check
+
+### Usage with Desktop App (STDIO)
+
+To integrate the STDIO server with a desktop app, add the following to your app's server configuration:
 
 ```json
 {
@@ -75,6 +103,30 @@ To integrate this server with a desktop app, add the following to your app's ser
     }
   }
 }
+```
+
+### Usage with Remote Clients (SSE)
+
+1. Start the SSE server: `npm run start:sse`
+2. Establish SSE connection: `GET http://localhost:3000/sse` 
+3. Extract session ID from the response
+4. Send MCP requests: `POST http://localhost:3000/messages?sessionId=<session_id>`
+
+Example with authentication:
+
+```bash
+# Start server with authentication
+API_KEY_TOKEN=secret123 npm run start:sse
+
+# Establish SSE connection
+curl -H "Authorization: Bearer secret123" http://localhost:3000/sse
+
+# Send fetch request (use session ID from SSE response)
+curl -X POST \
+  -H "Authorization: Bearer secret123" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"fetch_html","arguments":{"url":"https://example.com"}}}' \
+  "http://localhost:3000/messages?sessionId=YOUR_SESSION_ID"
 ```
 
 ## Features
