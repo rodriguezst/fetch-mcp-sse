@@ -1,12 +1,12 @@
-import { Fetcher } from "./Fetcher";
-import { JSDOM } from "jsdom";
-import TurndownService from "turndown";
+const { Fetcher } = require("./Fetcher");
+const { JSDOM } = require("jsdom");
+const TurndownService = require("turndown");
 
 global.fetch = jest.fn();
 
 jest.mock("jsdom");
-
 jest.mock("turndown");
+jest.mock("private-ip", () => jest.fn().mockReturnValue(false));
 
 describe("Fetcher", () => {
   beforeEach(() => {
